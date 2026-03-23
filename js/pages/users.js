@@ -47,22 +47,22 @@ function renderUsers(params = {}) {
     searchFields: ['firstName', 'lastName', 'email', 'phone', 'company', 'city', 'state', 'id'],
     filterDefs: [
       { field: 'status', label: 'All Statuses', options: Store.STATUS.users },
-      { field: 'types',  label: 'All Types',    options: Store.USER_TYPES },
+      { field: 'userTypes',  label: 'All Types',    options: Store.USER_TYPES },
       { field: 'tags',   label: 'All Tags',     options: Store.TAG_OPTIONS },
     ],
     defaultSort: 'lastName',
     columns: [
       { field: 'firstName', label: 'First',       sortable: true },
       { field: 'lastName',  label: 'Last',        sortable: true },
-      { field: 'types', label: 'Type', sortable: true, sortFn: (a, b, dir) => {
+      { field: 'userTypes', label: 'Type', sortable: true, sortFn: (a, b, dir) => {
         const topTypes = ['Member', 'Broker', 'Public'];
-        const aType = (a.types || []).find(t => topTypes.includes(t)) || '';
-        const bType = (b.types || []).find(t => topTypes.includes(t)) || '';
+        const aType = (a.userTypes || []).find(t => topTypes.includes(t)) || '';
+        const bType = (b.userTypes || []).find(t => topTypes.includes(t)) || '';
         return dir === 'asc' ? aType.localeCompare(bType) : bType.localeCompare(aType);
       }, render: row => {
-        if (!row.types || !row.types.length) return '<span style="color:var(--text-muted)">—</span>';
+        if (!row.userTypes || !row.userTypes.length) return '<span style="color:var(--text-muted)">—</span>';
         const topTypes = ['Member', 'Broker', 'Public'];
-        const displayType = row.types.find(t => topTypes.includes(t));
+        const displayType = row.userTypes.find(t => topTypes.includes(t));
         if (!displayType) return '<span style="color:var(--text-muted)">—</span>';
         const cMap = {
           'Member': 'background:#e0e7ff;color:#3730a3',
@@ -124,10 +124,10 @@ function renderUsers(params = {}) {
   // ─── STAT CHIPS RENDERER ─────────────────────────────────────────────────────
   function renderUserStatChips() {
     const all = Store.getAll('users');
-    const members  = all.filter(u => (u.types||[]).includes('Member')).length;
-    const donors   = all.filter(u => (u.types||[]).includes('Donor')).length;
-    const brokers  = all.filter(u => (u.types||[]).includes('Broker')).length;
-    const buyers   = all.filter(u => (u.types||[]).includes('Buyer')).length;
+    const members  = all.filter(u => (u.userTypes||[]).includes('Member')).length;
+    const donors   = all.filter(u => (u.userTypes||[]).includes('Donor')).length;
+    const brokers  = all.filter(u => (u.userTypes||[]).includes('Broker')).length;
+    const buyers   = all.filter(u => (u.userTypes||[]).includes('Buyer')).length;
     const active   = all.filter(u => u.status === 'Active').length;
     const bar = document.getElementById('user-stats-bar');
     if (!bar) return;
@@ -497,9 +497,9 @@ function renderRelatedSection(title, items, tableName, labelField) {
 // ─── NEW / EDIT USER MODAL ────────────────────────────────────────────────────
 function openUserForm(existingId, table) {
   const existing = existingId ? Store.getById('users', existingId) : null;
-  const formData = existing ? { ...existing } : { types: [], tags: [], status: 'Active' };
-  formData.types = formData.types || [];
-  formData.tags  = formData.tags  || [];
+  const formData = existing ? { ...existing } : { userTypes: [], tags: [], status: 'Active' };
+  formData.userTypes = formData.userTypes || [];
+  formData.tags      = formData.tags  || [];
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
@@ -555,8 +555,8 @@ function openUserForm(existingId, table) {
             <label class="form-label">User Types</label>
             <div class="checkbox-group" id="mf-types-group">
               ${Store.USER_TYPES.map(t => `
-                <label class="checkbox-option ${formData.types.includes(t)?'checked':''}" data-val="${t}">
-                  <input type="checkbox" value="${t}" ${formData.types.includes(t)?'checked':''}> ${t}
+                <label class="checkbox-option ${formData.userTypes.includes(t)?'checked':''}" data-val="${t}">
+                  <input type="checkbox" value="${t}" ${formData.userTypes.includes(t)?'checked':''}> ${t}
                 </label>`).join('')}
             </div>
           </div>
@@ -594,7 +594,7 @@ function openUserForm(existingId, table) {
   overlay.querySelector('#modal-cancel').onclick = close;
 
   // Wire checkbox groups
-  wireModalCheckboxGroup(overlay, '#mf-types-group', formData, 'types');
+  wireModalCheckboxGroup(overlay, '#mf-types-group', formData, 'userTypes');
   wireModalCheckboxGroup(overlay, '#mf-tags-group', formData, 'tags');
 
   let duplicateFound = null;
@@ -642,7 +642,7 @@ function openUserForm(existingId, table) {
       company: overlay.querySelector('#mf-company').value.trim(),
       notes:   overlay.querySelector('#mf-notes').value.trim(),
       status:  overlay.querySelector('#mf-status').value,
-      types:   formData.types,
+      userTypes: formData.userTypes,
       tags:    formData.tags,
     };
 
@@ -690,7 +690,7 @@ function openCSVImportModal(csvText, table) {
     { key: 'company',    label: 'Company' },
     { key: 'city',       label: 'City' },
     { key: 'state',      label: 'State' },
-    { key: 'types',      label: 'User Types (comma-sep)' },
+    { key: 'userTypes',  label: 'User Types (comma-sep)' },
     { key: 'tags',       label: 'Tags (comma-sep)' },
     { key: 'notes',      label: 'Notes' },
   ];
@@ -709,7 +709,8 @@ function openCSVImportModal(csvText, table) {
       hn === 'company'     ? 'company' :
       hn === 'city'        ? 'city' :
       hn === 'state'       ? 'state' :
-      hn === 'types'       ? 'types' :
+      hn === 'userTypes'       ? 'userTypes' :
+      hn === 'usertypes'   ? 'userTypes' :
       hn === 'tags'        ? 'tags' :
       hn === 'notes'       ? 'notes' : '__skip__';
     mapping[h] = match;
@@ -834,7 +835,7 @@ function openCSVImportModal(csvText, table) {
       headers.forEach(h => {
         if (!m[h] || m[h] === '__skip__') return;
         const val = row[h] || '';
-        if (m[h] === 'types' || m[h] === 'tags') {
+        if (m[h] === 'userTypes' || m[h] === 'tags') {
           rec[m[h]] = val.split(',').map(s => s.trim()).filter(Boolean);
         } else {
           rec[m[h]] = val;
@@ -844,7 +845,7 @@ function openCSVImportModal(csvText, table) {
       if (!rec.firstName && !rec.lastName && !rec.email) { skipped++; return; }
       if (Store.findDuplicateUser(rec.email, rec.firstName, rec.lastName, rec.phone)) { skipped++; return; }
 
-      rec.types  = rec.types  || [];
+      rec.userTypes  = rec.userTypes  || [];
       rec.tags   = rec.tags   || [];
       rec.status = rec.status || 'Active';
       Store.create('users', rec);
