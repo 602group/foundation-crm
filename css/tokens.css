@@ -1,0 +1,210 @@
+/* =============================================
+   EPIC FOUNDATION CRM — Design Tokens
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@600;700&display=swap');
+
+:root {
+  /* === COLOR PALETTE === */
+
+  /* Backgrounds */
+  --bg-base:        #0e1117;
+  --bg-surface:     #161b25;
+  --bg-elevated:    #1e2535;
+  --bg-hover:       #252d40;
+  --bg-active:      #2b3550;
+  --bg-border:      #2a3347;
+
+  /* Accent — Emerald */
+  --accent:         #22c55e;
+  --accent-dim:     #16a34a;
+  --accent-faint:   rgba(34, 197, 94, 0.10);
+  --accent-glow:    rgba(34, 197, 94, 0.20);
+
+  /* Text */
+  --text-primary:   #f0f4ff;
+  --text-secondary: #8a96b0;
+  --text-muted:     #4e5a72;
+  --text-accent:    #22c55e;
+  --text-inverse:   #0e1117;
+
+  /* Status colors */
+  --status-green:   #22c55e;
+  --status-blue:    #3b82f6;
+  --status-amber:   #f59e0b;
+  --status-red:     #ef4444;
+  --status-purple:  #a855f7;
+  --status-gray:    #64748b;
+  --status-teal:    #14b8a6;
+  --status-orange:  #f97316;
+
+  /* Status backgrounds */
+  --status-green-bg:  rgba(34, 197, 94, 0.12);
+  --status-blue-bg:   rgba(59, 130, 246, 0.12);
+  --status-amber-bg:  rgba(245, 158, 11, 0.12);
+  --status-red-bg:    rgba(239, 68, 68, 0.12);
+  --status-purple-bg: rgba(168, 85, 247, 0.12);
+  --status-gray-bg:   rgba(100, 116, 139, 0.12);
+  --status-teal-bg:   rgba(20, 184, 166, 0.12);
+  --status-orange-bg: rgba(249, 115, 22, 0.12);
+
+  /* === TYPOGRAPHY === */
+  --font-sans:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter Tight', 'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   13px;
+  --text-sm:   14px;
+  --text-base: 15px;
+  --text-md:   16px;
+  --text-lg:   19px;
+  --text-xl:   22px;
+  --text-2xl:  26px;
+  --text-3xl:  32px;
+
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-semi:    600;
+  --fw-bold:    700;
+
+  --leading-tight:  1.25;
+  --leading-normal: 1.5;
+  --leading-loose:  1.75;
+
+  /* === SPACING === */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* === BORDERS & RADIUS === */
+  --radius-sm:  4px;
+  --radius-md:  6px;
+  --radius-lg:  10px;
+  --radius-xl:  16px;
+  --radius-full: 9999px;
+
+  --border-subtle: 1px solid var(--bg-border);
+  --border-accent: 1px solid var(--accent-dim);
+
+  /* === SHADOWS === */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-xl:  0 16px 48px rgba(0,0,0,0.7);
+
+  /* === TRANSITIONS === */
+  --transition-fast:   150ms ease;
+  --transition-normal: 220ms ease;
+  --transition-slow:   350ms ease;
+
+  /* === SIDEBAR === */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 60px;
+
+  /* === Z-INDEX === */
+  --z-base:    1;
+  --z-dropdown: 100;
+  --z-drawer:   200;
+  --z-modal:    300;
+  --z-toast:    400;
+}
+
+/* ═══════════════════════════════════════════════
+   LIGHT MODE THEME
+   Applied when <body> has class="light-mode"
+═══════════════════════════════════════════════ */
+
+body.light-mode {
+  /* Backgrounds */
+  --bg-base:        #f4f6fa;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #f0f2f8;
+  --bg-hover:       #e8ecf4;
+  --bg-active:      #dde3f0;
+  --bg-border:      #d0d7e8;
+
+  /* Text */
+  --text-primary:   #0d1226;
+  --text-secondary: #3d4a6b;
+  --text-muted:     #8a96b3;
+  --text-accent:    #16a34a;
+  --text-inverse:   #ffffff;
+
+  /* Border */
+  --border-subtle: 1px solid #d0d7e8;
+
+  /* Status backgrounds — lighter for light mode */
+  --status-green-bg:  rgba(34, 197, 94, 0.10);
+  --status-blue-bg:   rgba(59, 130, 246, 0.10);
+  --status-amber-bg:  rgba(245, 158, 11, 0.10);
+  --status-red-bg:    rgba(239, 68, 68, 0.10);
+  --status-purple-bg: rgba(168, 85, 247, 0.10);
+  --status-gray-bg:   rgba(100, 116, 139, 0.10);
+  --status-teal-bg:   rgba(20, 184, 166, 0.10);
+  --status-orange-bg: rgba(249, 115, 22, 0.10);
+
+  /* Shadows — lighter for light mode */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
+  --shadow-xl:  0 16px 48px rgba(0,0,0,0.15);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  width: 100%;
+  text-align: left;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.theme-toggle-track {
+  width: 30px;
+  height: 16px;
+  background: var(--bg-border);
+  border-radius: var(--radius-full);
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.theme-toggle-track.on {
+  background: var(--accent);
+}
+
+.theme-toggle-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.theme-toggle-track.on .theme-toggle-thumb {
+  transform: translateX(14px);
+}

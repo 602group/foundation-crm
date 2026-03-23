@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Epic Foundation CRM</title>
+  <meta name="description" content="Epic Foundation Internal Operations Platform — private CRM for auctions, users, donors, and operations." />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+
+  <style>
+    /* Minor additional overrides */
+    .nav-divider {
+      height: 1px;
+      background: var(--bg-border);
+      margin: var(--space-2) var(--space-4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- App Shell -->
+<div id="app">
+
+  <!-- ═══════════════════════════════════════
+       SIDEBAR NAVIGATION
+  ═══════════════════════════════════════ -->
+  <nav id="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">EF</div>
+      <div class="sidebar-logo-text">
+        <div class="org">Epic Foundation</div>
+        <div class="app">CRM · Operations</div>
+      </div>
+    </div>
+
+    <!-- Navigation Items -->
+    <div class="sidebar-nav">
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Overview</div>
+        <div class="nav-item" data-route="dashboard" data-page="dashboard" onclick="Router.navigate('dashboard')">
+          <span class="nav-icon" id="nav-icon-dashboard"></span>
+          Dashboard
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Core Records</div>
+        <div class="nav-item" data-route="users" data-page="users" onclick="Router.navigate('users')">
+          <span class="nav-icon" id="nav-icon-users"></span>
+          Users
+          <span class="nav-badge" id="badge-users">0</span>
+        </div>
+        <div class="nav-item" data-route="auctions" data-page="auctions" onclick="Router.navigate('auctions')">
+          <span class="nav-icon" id="nav-icon-auctions"></span>
+          Auctions
+          <span class="nav-badge" id="badge-auctions">0</span>
+        </div>
+        <div class="nav-item" data-route="opportunities" data-page="opportunities" onclick="Router.navigate('opportunities')">
+          <span class="nav-icon" id="nav-icon-opportunities"></span>
+          Special Opps
+          <span class="nav-badge" id="badge-opportunities">0</span>
+        </div>
+        <div class="nav-item" data-route="courses" data-page="courses" onclick="Router.navigate('courses')">
+          <span class="nav-icon" id="nav-icon-courses"></span>
+          Courses & Clubs
+          <span class="nav-badge" id="badge-courses">0</span>
+        </div>
+        <div class="nav-item" data-route="donations" data-page="donations" onclick="Router.navigate('donations')">
+          <span class="nav-icon" id="nav-icon-donations"></span>
+          Donations
+          <span class="nav-badge" id="badge-donations">0</span>
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Operations</div>
+        <div class="nav-item" data-route="tasks" data-page="tasks" onclick="Router.navigate('tasks')">
+          <span class="nav-icon" id="nav-icon-tasks"></span>
+          Tasks
+          <span class="nav-badge" id="badge-tasks">0</span>
+        </div>
+        <div class="nav-item" data-route="financials" data-page="financials" onclick="Router.navigate('financials')">
+          <span class="nav-icon" id="nav-icon-financials"></span>
+          Financials
+          <span class="nav-badge" id="badge-financials">0</span>
+        </div>
+        <div class="nav-item" data-route="messages" data-page="messages" onclick="Router.navigate('messages')">
+          <span class="nav-icon" id="nav-icon-messages"></span>
+          Messages
+          <span class="nav-badge" id="badge-messages">0</span>
+        </div>
+        <div class="nav-item" data-route="events" data-page="events" onclick="Router.navigate('events')">
+          <span class="nav-icon" id="nav-icon-events"></span>
+          Events
+          <span class="nav-badge" id="badge-events">0</span>
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Marketing</div>
+        <div class="nav-item" data-route="marketing" onclick="Router.navigate('marketing')">
+          <span class="nav-icon" id="nav-icon-marketing"></span>
+          Marketing
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">System</div>
+
+        <div class="nav-item" data-route="imports" onclick="Router.navigate('imports')">
+          <span class="nav-icon" id="nav-icon-imports"></span>
+          Imports & Exports
+        </div>
+        <div class="nav-item" data-route="admin" onclick="Router.navigate('admin')">
+          <span class="nav-icon" id="nav-icon-admin"></span>
+          Settings & Admin
+        </div>
+      </div>
+
+
+    </div><!-- /.sidebar-nav -->
+
+    <!-- Theme Toggle -->
+    <div style="padding:0 var(--space-3) var(--space-2)">
+      <button class="theme-toggle" id="theme-toggle-btn" onclick="ThemeToggle.toggle()">
+        <div class="theme-toggle-track" id="theme-track">
+          <div class="theme-toggle-thumb"></div>
+        </div>
+        <span id="theme-label">Light Mode</span>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="sidebar-user-initials">HB</div>
+      <div style="flex:1">
+        <div id="sidebar-user-name" style="color:var(--text-secondary);font-weight:var(--fw-medium);font-size:var(--text-sm)">Hunter Burnside</div>
+        <div id="sidebar-user-role" style="font-size:10px;color:var(--text-muted)">Super Admin</div>
+      </div>
+      <button id="logout-btn" title="Sign Out" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;border-radius:var(--radius-sm);font-size:14px" onclick="Auth.logout()" title="Sign out">⎋</button>
+    </div>
+
+  </nav><!-- /#sidebar -->
+
+  <!-- ═══════════════════════════════════════
+       MAIN CONTENT AREA
+  ═══════════════════════════════════════ -->
+  <div id="main-column" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0">
+    <!-- Global Search Topbar -->
+    <div id="page-topbar"></div>
+    <!-- Page Content -->
+    <main id="main" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <!-- Pages render here -->
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted)">Loading...</div>
+    </main>
+  </div>
+
+</div><!-- /#app -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT — CORE ENGINE
+═══════════════════════════════════════ -->
+<!-- Data Layer -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+
+<!-- Router -->
+<script src="js/router.js"></script>
+
+<!-- Shared UI Utilities -->
+<script src="js/ui.js"></script>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT — PAGE MODULES
+═══════════════════════════════════════ -->
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/users.js"></script>
+<script src="js/pages/auctions.js"></script>
+<script src="js/pages/opportunities.js"></script>
+<script src="js/pages/courses.js"></script>
+<script src="js/pages/donations.js"></script>
+<script src="js/pages/tasks.js"></script>
+<script src="js/pages/financials.js"></script>
+<script src="js/pages/messages.js"></script>
+<script src="js/pages/events.js"></script>
+<script src="js/importer.js"></script>
+<script src="js/pages/imports.js"></script>
+<script src="js/pages/admin.js"></script>
+<script src="js/pages/marketing.js"></script>
+<script src="js/pages/assistant.js"></script>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT — APP INIT
+═══════════════════════════════════════ -->
+<script>
+  // ─── THEME TOGGLE ──────────────────────────────────────────────────────────────
+  const ThemeToggle = (() => {
+    const KEY = 'crm_theme';
+    let isLight = localStorage.getItem(KEY) === 'light';
+
+    function apply() {
+      document.body.classList.toggle('light-mode', isLight);
+      const track = document.getElementById('theme-track');
+      const label = document.getElementById('theme-label');
+      if (track) track.classList.toggle('on', isLight);
+      if (label) label.textContent = isLight ? 'Dark Mode' : 'Light Mode';
+    }
+
+    function toggle() {
+      isLight = !isLight;
+      localStorage.setItem(KEY, isLight ? 'light' : 'dark');
+      apply();
+    }
+
+    // Apply on load
+    apply();
+    return { toggle, apply };
+  })();
+
+  // ─── ICON INJECTION ──────────────────────────────────────────────────────────
+  const iconMap = {
+    dashboard: Icons.dashboard, users: Icons.users, auctions: Icons.auctions,
+    opportunities: Icons.opportunities, courses: Icons.courses, donations: Icons.donations,
+    tasks: Icons.tasks, financials: Icons.financials, messages: Icons.messages,
+    events: Icons.events, imports: Icons.imports, admin: Icons.admin,
+    marketing: Icons.marketing,
+  };
+
+  Object.entries(iconMap).forEach(([key, svg]) => {
+    const el = document.getElementById(`nav-icon-${key}`);
+    if (el) el.innerHTML = svg;
+  });
+
+
+  // ─── SIDEBAR BADGE UPDATER ────────────────────────────────────────────────────
+  function updateSidebarBadges() {
+    const stats = Store.getStats();
+    const badgeMap = {
+      users: stats.users, auctions: stats.auctions, opportunities: stats.opportunities,
+      courses: stats.courses, donations: stats.activeDonations, tasks: stats.openTasks,
+      financials: stats.financials, messages: stats.openMessages, events: stats.upcomingEvents,
+    };
+    Object.entries(badgeMap).forEach(([key, count]) => {
+      const badge = document.getElementById(`badge-${key}`);
+      if (badge) badge.textContent = count;
+    });
+  }
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────────
+  // 0. Run seed data (only on first ever load), then dedup any accumulated duplicates
+  Seed.run();
+  Seed.deduplicateAll(); // silently collapses any duplicate records on every load
+
+  // 1. Require login — if not authenticated, show login screen and stop
+  if (!Auth.requireLogin()) {
+    // Not authenticated — login screen shown, stop here.
+    // After successful login the page reloads and reaches step 2+
+  } else {
+    // 2. Apply permission-aware sidebar
+    Auth.applyPermissions();
+
+    // 3. Register all routes
+    Router.on('dashboard',       params => { renderDashboard(params);      updateSidebarBadges(); Auth.applyPermissions(); });
+    Router.on('users',           params => { renderUsers(params);           updateSidebarBadges(); });
+    Router.on('auctions',        params => { renderAuctions(params);        updateSidebarBadges(); });
+    Router.on('opportunities',   params => { renderOpportunities(params);   updateSidebarBadges(); });
+    Router.on('courses',         params => { renderCourses(params);         updateSidebarBadges(); });
+    Router.on('donations',       params => { renderDonations(params);       updateSidebarBadges(); });
+    Router.on('tasks',           params => { renderTasks(params);           updateSidebarBadges(); });
+    Router.on('financials',      params => { renderFinancials(params);      updateSidebarBadges(); });
+    Router.on('messages',        params => { renderMessages(params);        updateSidebarBadges(); });
+    Router.on('events',          params => { renderEvents(params);          updateSidebarBadges(); });
+    Router.on('imports',         params => { renderImports(params);         updateSidebarBadges(); });
+    Router.on('admin',           params => { renderAdmin(params);           updateSidebarBadges(); });
+
+    // Marketing — single route, tab handled internally via MktTabs
+    Router.on('marketing', params => { renderMarketingModule(params); });
+    // Legacy sub-routes: redirect to the marketing module with the correct tab active
+    Router.on('marketing-email',  () => Router.navigate('marketing?tab=email'));
+    Router.on('email-templates',  () => Router.navigate('marketing?tab=templates'));
+    Router.on('social-media',     () => Router.navigate('marketing?tab=social'));
+    Router.on('newsletter',       () => Router.navigate('marketing?tab=newsletter'));
+
+    // 4. Start router (dispatches initial route)
+    Router.init();
+
+    // 5. If no hash set, go to dashboard
+    if (!window.location.hash) Router.navigate('dashboard');
+
+    // 6. Init global search bar
+    GlobalSearch.init();
+
+    // 7. Initialize Global AI Operator Widget
+    if (typeof initAIOperator === 'function') {
+      initAIOperator();
+    }
+
+    console.log('[Epic Foundation CRM] Loaded successfully.');
+  }
+</script>
+
+</body>
+</html>
