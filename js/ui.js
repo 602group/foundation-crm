@@ -832,7 +832,7 @@ const BulkSelect = (() => {
       const ok = await Confirm.show('Are you sure you want to permanently delete these ' + count + ' records?', 'Bulk Delete');
       if (!ok) return;
       const ids = [..._selectedIds];
-      ids.forEach(id => Store.delete(_tableName, id));
+      ids.forEach(id => Store.remove(_tableName, id));
       Toast.success('Deleted ' + count + ' records');
       _selectedIds.clear();
       _removeBar();
