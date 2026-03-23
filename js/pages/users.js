@@ -36,7 +36,7 @@ function renderUsers(params = {}) {
     Store.create('users', {
       firstName: 'Jane', lastName: 'Public', email: 'jane@public.org',
       phone: '555-0199', city: 'Demo City', state: 'CA',
-      status: 'Active', types: ['Public'], tags: ['New Contact']
+      status: 'Active', userTypes: ['Public'], tags: ['New Contact']
     });
   }
 

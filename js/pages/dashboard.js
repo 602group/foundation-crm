@@ -4,7 +4,8 @@
  */
 
 function renderDashboard() {
-  const main = document.getElementById('main');
+  try {
+    const main = document.getElementById('main');
   const stats = Store.getStats();
   const today = new Date().toISOString().split('T')[0];
   const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -259,4 +260,8 @@ function renderDashboard() {
     Toast.success('Task marked complete');
     renderDashboard();
   }));
+  } catch (err) {
+    console.error('CRASH IN RENDER DASHBOARD:', err);
+    document.getElementById('main').innerHTML = `<div style="padding:20px;color:red;">Dashboard Crash: ${err.message}<br><pre>${err.stack}</pre></div>`;
+  }
 }

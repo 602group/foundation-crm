@@ -230,6 +230,17 @@ const Store = (() => {
     for (const [k, v] of Object.entries(row)) {
       out[FIELD_MAP[k] || k] = v;
     }
+    // Sanitize JSONB/array fields to guarantee they are arrays
+    const arrayFields = ['activityLog', 'userTypes', 'types', 'tags', 'userIds'];
+    arrayFields.forEach(field => {
+      if (out[field] !== undefined) {
+        let val = out[field];
+        if (typeof val === 'string') {
+          try { val = JSON.parse(val); } catch { val = val ? [val] : []; }
+        }
+        out[field] = Array.isArray(val) ? val : (val ? [val] : []);
+      }
+    });
     return out;
   }
 
@@ -690,7 +701,11 @@ const Store = (() => {
     Object.keys(TABLES).forEach(tableName => {
       if (['counters','settings'].includes(tableName)) return;
       (_cache[tableName] || []).forEach(record => {
-        (record.activityLog || []).forEach(entry => {
+        let logArray = record.activityLog;
+        if (typeof logArray === 'string') {
+          try { logArray = JSON.parse(logArray); } catch { logArray = []; }
+        }
+        (Array.isArray(logArray) ? logArray : []).forEach(entry => {
           allActivity.push({
             ...entry, tableName, recordId: record.id,
             recordLabel: (record.firstName ? `${record.firstName} ${record.lastName || ''}`.trim() : record.title || record.name || record.id),
