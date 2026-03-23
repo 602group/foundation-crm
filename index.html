@@ -182,7 +182,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/store.js"></script>
-<script src="js/seed.js"></script>
+<!-- seed.js removed — data now lives in Supabase -->
 
 <!-- Router -->
 <script src="js/router.js"></script>
@@ -266,20 +266,21 @@
     });
   }
 
-  // ─── INIT ─────────────────────────────────────────────────────────────────────
-  // 0. Run seed data (only on first ever load), then dedup any accumulated duplicates
-  Seed.run();
-  Seed.deduplicateAll(); // silently collapses any duplicate records on every load
+  // ─── ASYNC BOOT ───────────────────────────────────────────────────────────────
+  (async () => {
+    // 1. Check server-side session — shows login screen if not authenticated
+    const loggedIn = await Auth.requireLogin();
+    if (!loggedIn) return; // login screen is showing — stop here
 
-  // 1. Require login — if not authenticated, show login screen and stop
-  if (!Auth.requireLogin()) {
-    // Not authenticated — login screen shown, stop here.
-    // After successful login the page reloads and reaches step 2+
-  } else {
-    // 2. Apply permission-aware sidebar
+    // 2. Load all data from Supabase into Store cache
+    document.getElementById('main').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);gap:12px"><span style="font-size:1.4rem">⏳</span> Loading data…</div>';
+    await Store.init();
+
+    // 3. Apply permission-aware sidebar
     Auth.applyPermissions();
 
-    // 3. Register all routes
+    // 4. Register all routes
     Router.on('dashboard',       params => { renderDashboard(params);      updateSidebarBadges(); Auth.applyPermissions(); });
     Router.on('users',           params => { renderUsers(params);           updateSidebarBadges(); });
     Router.on('auctions',        params => { renderAuctions(params);        updateSidebarBadges(); });
@@ -292,31 +293,22 @@
     Router.on('events',          params => { renderEvents(params);          updateSidebarBadges(); });
     Router.on('imports',         params => { renderImports(params);         updateSidebarBadges(); });
     Router.on('admin',           params => { renderAdmin(params);           updateSidebarBadges(); });
+    Router.on('marketing',       params => { renderMarketingModule(params); });
+    Router.on('marketing-email', () => Router.navigate('marketing?tab=email'));
+    Router.on('email-templates', () => Router.navigate('marketing?tab=templates'));
+    Router.on('social-media',    () => Router.navigate('marketing?tab=social'));
+    Router.on('newsletter',      () => Router.navigate('marketing?tab=newsletter'));
 
-    // Marketing — single route, tab handled internally via MktTabs
-    Router.on('marketing', params => { renderMarketingModule(params); });
-    // Legacy sub-routes: redirect to the marketing module with the correct tab active
-    Router.on('marketing-email',  () => Router.navigate('marketing?tab=email'));
-    Router.on('email-templates',  () => Router.navigate('marketing?tab=templates'));
-    Router.on('social-media',     () => Router.navigate('marketing?tab=social'));
-    Router.on('newsletter',       () => Router.navigate('marketing?tab=newsletter'));
-
-    // 4. Start router (dispatches initial route)
+    // 5. Start router
     Router.init();
-
-    // 5. If no hash set, go to dashboard
     if (!window.location.hash) Router.navigate('dashboard');
 
-    // 6. Init global search bar
+    // 6. Init global search and AI widget
     GlobalSearch.init();
+    if (typeof initAIOperator === 'function') initAIOperator();
 
-    // 7. Initialize Global AI Operator Widget
-    if (typeof initAIOperator === 'function') {
-      initAIOperator();
-    }
-
-    console.log('[Epic Foundation CRM] Loaded successfully.');
-  }
+    console.log('[Epic Foundation CRM] Loaded — Supabase connected.');
+  })();
 </script>
 
 </body>
