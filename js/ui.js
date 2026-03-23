@@ -818,7 +818,26 @@ const BulkSelect = (() => {
     _bar.innerHTML = '<div class="bulk-action-bar-count">☑ ' + count + ' row' + (count !== 1 ? 's' : '') + ' selected</div>'
       + statusHtml
       + '<button class="btn btn-ghost btn-sm" id="bulk-export-btn">⬇ Export Selected</button>'
+      + '<button class="btn btn-ghost btn-sm" style="color:var(--status-red)" id="bulk-delete-btn">' + Icons.trash + ' Delete</button>'
       + '<button class="btn btn-ghost btn-sm" id="bulk-clear-btn" style="color:var(--text-muted)">✕ Clear</button>';
+
+    _bar.querySelector('#bulk-clear-btn') && _bar.querySelector('#bulk-clear-btn').addEventListener('click', () => {
+      _selectedIds.clear();
+      document.querySelectorAll('.bulk-row-check, #bulk-select-all').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.bulk-selected').forEach(tr => tr.classList.remove('bulk-selected'));
+      _removeBar();
+    });
+
+    _bar.querySelector('#bulk-delete-btn') && _bar.querySelector('#bulk-delete-btn').addEventListener('click', async () => {
+      const ok = await Confirm.show('Are you sure you want to permanently delete these ' + count + ' records?', 'Bulk Delete');
+      if (!ok) return;
+      const ids = [..._selectedIds];
+      ids.forEach(id => Store.delete(_tableName, id));
+      Toast.success('Deleted ' + count + ' records');
+      _selectedIds.clear();
+      _removeBar();
+      if (_onRefresh) _onRefresh();
+    });
 
     _bar.querySelector('#bulk-export-btn') && _bar.querySelector('#bulk-export-btn').addEventListener('click', () => {
       const rows = [..._selectedIds].map(id => Store.getById(_tableName, id)).filter(Boolean);
