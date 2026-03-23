@@ -1,159 +1,107 @@
 /**
- * EPIC Foundation CRM — Auth Module
- * localStorage-based session management + login gate
- * Passwords hashed with SHA-256 via SubtleCrypto
+ * EPIC Foundation CRM — Auth Module (v2 — Server-backed sessions)
+ * Login validates against Supabase via /api/auth/login.
+ * Session state is stored in an HttpOnly cookie on the server.
+ * The client queries /api/auth/session to check auth status on load.
  */
 
 const Auth = (() => {
   'use strict';
 
-  const SESSION_KEY = 'crm_session';
-  const MAX_SESSION_HOURS = 24;
-
-  // ── Section keys that map to sidebar nav items ──────────────────────────────
+  // ─── Section keys for sidebar nav ──────────────────────────────────────────
   const SECTIONS = ['dashboard','users','auctions','opportunities','courses',
     'donations','tasks','financials','messages','events','imports','admin'];
 
-  // ── Default role permission templates ───────────────────────────────────────
-  // Used when an admin record has no custom permissions set
+  // ─── Role defaults (used locally for display only) ──────────────────────────
   const ROLE_DEFAULTS = {
     'Super Admin': { _all: true },
     'Admin': {
-      dashboard: 'view',
-      users: 'view,create,edit,delete,export',
-      auctions: 'view,create,edit,delete,export,import',
-      opportunities: 'view,create,edit,delete,export,import',
-      donations: 'view,create,edit,delete,export,import',
-      courses: 'view,create,edit,delete,export,import',
-      tasks: 'view,create,edit,delete,export',
-      financials: 'view,create,edit,delete,export',
-      messages: 'view,create,edit',
-      events: 'view,create,edit,delete,export',
-      imports: 'view,create',
-      admin: '',
+      dashboard: 'view', users: 'view,create,edit,delete,export',
+      auctions: 'view,create,edit,delete,export,import', opportunities: 'view,create,edit,delete,export,import',
+      donations: 'view,create,edit,delete,export,import', courses: 'view,create,edit,delete,export,import',
+      tasks: 'view,create,edit,delete,export', financials: 'view,create,edit,delete,export',
+      messages: 'view,create,edit', events: 'view,create,edit,delete,export', imports: 'view,create', admin: '',
     },
     'Limited Admin': {
-      dashboard: 'view',
-      users: 'view,edit',
-      auctions: 'view,edit,export',
-      opportunities: 'view,edit',
-      donations: 'view',
-      courses: 'view',
-      tasks: 'view,create,edit,delete',
-      financials: '',
-      messages: 'view',
-      events: 'view',
-      imports: '',
-      admin: '',
+      dashboard: 'view', users: 'view,edit', auctions: 'view,edit,export', opportunities: 'view,edit',
+      donations: 'view', courses: 'view', tasks: 'view,create,edit,delete', financials: '', messages: 'view',
+      events: 'view', imports: '', admin: '',
     },
     'View Only': {
-      dashboard: 'view',
-      users: 'view',
-      auctions: 'view,export',
-      opportunities: 'view',
-      donations: 'view',
-      courses: 'view',
-      tasks: 'view',
-      financials: '',
-      messages: 'view',
-      events: 'view',
-      imports: '',
-      admin: '',
+      dashboard: 'view', users: 'view', auctions: 'view,export', opportunities: 'view', donations: 'view',
+      courses: 'view', tasks: 'view', financials: '', messages: 'view', events: 'view', imports: '', admin: '',
     },
   };
 
-  // ── Password hashing ────────────────────────────────────────────────────────
-  async function hashPassword(plain) {
-    if (!plain) return null;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(plain);
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  // ─── In-memory session (populated from server on init) ──────────────────────
+  let _session = null;
+
+  // ─── API helper ────────────────────────────────────────────────────────────
+  function _apiBase() {
+    if (typeof window === 'undefined') return '';
+    const { protocol, hostname, port } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return `${protocol}//${hostname}:${port || 3001}`;
+    return '';
   }
 
-  async function verifyPassword(plain, storedHash) {
-    if (!storedHash) return true; // null hash = first-login bypass
-    const hash = await hashPassword(plain);
-    return hash === storedHash;
+  async function _api(method, path, body) {
+    const res = await fetch(_apiBase() + path, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return res.json();
   }
 
-  // ── Session management ──────────────────────────────────────────────────────
-  function getSession() {
+  // ─── Check session from server (called at app init) ─────────────────────────
+  async function checkSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      const session = JSON.parse(raw);
-      // Check expiry
-      const ageHours = (Date.now() - session.loginTime) / 3600000;
-      if (ageHours > MAX_SESSION_HOURS) { clearSession(); return null; }
-      return session;
-    } catch { return null; }
+      const data = await _api('GET', '/api/auth/session');
+      if (data.authenticated) {
+        _session = data;
+        return true;
+      }
+    } catch {}
+    _session = null;
+    return false;
   }
 
-  function setSession(adminRecord) {
-    const perms = adminRecord.permissions || ROLE_DEFAULTS[adminRecord.role] || {};
-    const session = {
-      adminId: adminRecord.id,
-      name: adminRecord.name,
-      email: adminRecord.email,
-      role: adminRecord.role,
-      permissions: perms,
-      loginTime: Date.now(),
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  }
+  function getSession() { return _session; }
+  function isLoggedIn() { return !!_session; }
 
-  function clearSession() {
-    localStorage.removeItem(SESSION_KEY);
-  }
-
-  function isLoggedIn() {
-    return !!getSession();
-  }
-
-  // ── Permission checker ──────────────────────────────────────────────────────
+  // ─── Permission checker ─────────────────────────────────────────────────────
   function getPermission(section, action) {
-    const session = getSession();
-    if (!session) return false;
-    const perms = session.permissions || {};
-    if (perms._all) return true; // Super Admin
+    if (!_session) return false;
+    const perms = _session.permissions || ROLE_DEFAULTS[_session.role] || {};
+    if (perms._all) return true;
     const sectionPerms = perms[section] || '';
     if (!sectionPerms) return false;
     if (action === 'view') return sectionPerms.includes('view') || sectionPerms.includes('all');
     return sectionPerms.includes(action) || sectionPerms.includes('all');
   }
 
-  // ── Apply permission-aware sidebar ─────────────────────────────────────────
+  // ─── Apply permission-aware sidebar ────────────────────────────────────────
   function applyPermissions() {
-    const session = getSession();
-    if (!session) return;
-
-    // Hide/show nav items based on permissions
+    if (!_session) return;
     SECTIONS.forEach(section => {
-      const navItem = document.querySelector(`.nav-item[data-page="${section}"]`)
-        || document.querySelector(`[data-page="${section}"]`);
+      const navItem = document.querySelector(`.nav-item[data-page="${section}"]`) || document.querySelector(`[data-page="${section}"]`);
       if (!navItem) return;
-
-      const hasView = getPermission(section, 'view');
-      navItem.style.display = hasView ? '' : 'none';
+      navItem.style.display = getPermission(section, 'view') ? '' : 'none';
     });
-
-    // Update user display in sidebar
-    const userNameEl = document.getElementById('sidebar-user-name');
-    const userRoleEl = document.getElementById('sidebar-user-role');
+    const userNameEl     = document.getElementById('sidebar-user-name');
+    const userRoleEl     = document.getElementById('sidebar-user-role');
     const userInitialsEl = document.getElementById('sidebar-user-initials');
-    if (userNameEl) userNameEl.textContent = session.name;
-    if (userRoleEl) userRoleEl.textContent = session.role;
+    if (userNameEl)     userNameEl.textContent  = _session.name;
+    if (userRoleEl)     userRoleEl.textContent  = _session.role;
     if (userInitialsEl) {
-      const parts = session.name.split(' ');
-      userInitialsEl.textContent = (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
+      const parts = (_session.name || '').split(' ');
+      userInitialsEl.textContent = ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase();
     }
   }
 
-  // ── Login screen ────────────────────────────────────────────────────────────
+  // ─── Login screen ───────────────────────────────────────────────────────────
   function showLoginScreen(errorMsg = '') {
-    // Remove any existing app shell classes so the login occupies full screen
     document.body.innerHTML = `
       <div class="login-screen">
         <div class="login-card">
@@ -180,7 +128,7 @@ const Auth = (() => {
             <button class="btn btn-primary" id="login-btn" style="width:100%;margin-top:var(--space-4);padding:10px;font-size:var(--text-sm)">
               Sign In →
             </button>
-            <div id="login-first-time" style="display:none;margin-top:var(--space-3);font-size:var(--text-xs);color:var(--text-muted);text-align:center">
+            <div style="margin-top:var(--space-3);font-size:var(--text-xs);color:var(--text-muted);text-align:center">
               First login? Leave password blank or enter any password to set it.
             </div>
           </div>
@@ -191,24 +139,15 @@ const Auth = (() => {
       </div>
     `;
 
-    // Toast container needed even on login screen
     const toastContainer = document.createElement('div');
     toastContainer.id = 'toast-container';
     toastContainer.className = 'toast-container';
     document.body.appendChild(toastContainer);
 
-    const emailEl = document.getElementById('login-email');
-    const pwEl = document.getElementById('login-password');
+    const emailEl  = document.getElementById('login-email');
+    const pwEl     = document.getElementById('login-password');
     const loginBtn = document.getElementById('login-btn');
     const togglePw = document.getElementById('toggle-pw');
-
-    // Check if any admin has null password → show first-time hint
-    if (typeof Store !== 'undefined') {
-      const admins = Store.getAll('admins');
-      if (admins.some(a => !a.passwordHash)) {
-        document.getElementById('login-first-time').style.display = 'block';
-      }
-    }
 
     if (togglePw) {
       togglePw.onclick = () => {
@@ -221,94 +160,71 @@ const Auth = (() => {
       loginBtn.disabled = true;
       loginBtn.textContent = 'Signing in…';
       attemptLogin(emailEl.value.trim(), pwEl.value).then(ok => {
-        if (!ok) {
-          loginBtn.disabled = false;
-          loginBtn.textContent = 'Sign In →';
-        }
+        if (!ok) { loginBtn.disabled = false; loginBtn.textContent = 'Sign In →'; }
       });
     };
 
     loginBtn.addEventListener('click', doLogin);
     pwEl.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
     emailEl.addEventListener('keydown', e => { if (e.key === 'Enter') pwEl.focus(); });
-
-    // Auto-focus email
     setTimeout(() => emailEl?.focus(), 100);
   }
 
-  // ── Login attempt logic ─────────────────────────────────────────────────────
+  // ─── Login attempt ──────────────────────────────────────────────────────────
   async function attemptLogin(email, password) {
     if (!email) { showLoginScreen('Please enter your email address.'); return false; }
-
-    let admins = [];
-    try { admins = Store.getAll('admins'); } catch { }
-
-    const admin = admins.find(a => a.email?.toLowerCase() === email.toLowerCase());
-
-    if (!admin) {
-      showLoginScreen('No admin account found with that email address.');
+    try {
+      const data = await _api('POST', '/api/auth/login', { email, password });
+      if (data.error) { showLoginScreen(data.error); return false; }
+      // Session cookie set by server — re-check and load app
+      const ok = await checkSession();
+      if (ok) {
+        await Store.init();
+        window.location.reload();
+      } else {
+        showLoginScreen('Login failed. Please try again.');
+      }
+      return ok;
+    } catch (err) {
+      showLoginScreen('Could not reach the server. Make sure it is running.');
       return false;
     }
-
-    if (admin.status === 'Suspended' || admin.status === 'Inactive') {
-      showLoginScreen('Your account is inactive or suspended. Contact a Super Admin.');
-      return false;
-    }
-
-    const passwordOk = await verifyPassword(password, admin.passwordHash);
-
-    if (!passwordOk) {
-      showLoginScreen('Incorrect password. Please try again.');
-      return false;
-    }
-
-    // First-login: set the password if it was null
-    if (!admin.passwordHash && password) {
-      const newHash = await hashPassword(password);
-      Store.update('admins', admin.id, { passwordHash: newHash });
-    }
-
-    // Update last login
-    Store.update('admins', admin.id, { lastLogin: new Date().toISOString() });
-
-    // Set session
-    setSession(admin);
-
-    // Reload the app
-    window.location.reload();
-    return true;
   }
 
-  // ── Logout ──────────────────────────────────────────────────────────────────
-  function logout() {
-    clearSession();
+  // ─── Logout ─────────────────────────────────────────────────────────────────
+  async function logout() {
+    try { await _api('POST', '/api/auth/logout'); } catch {}
+    _session = null;
     showLoginScreen();
   }
 
-  // ── Guard: call at app init ─────────────────────────────────────────────────
-  function requireLogin() {
-    if (!isLoggedIn()) {
-      // Delay slightly to let Store initialize first
-      setTimeout(() => showLoginScreen(), 0);
+  // ─── Guard: called at app init ──────────────────────────────────────────────
+  async function requireLogin() {
+    const ok = await checkSession();
+    if (!ok) {
+      showLoginScreen();
       return false;
     }
     return true;
   }
 
+  // ─── Password hash (kept for migration helpers only) ────────────────────────
+  async function hashPassword(plain) {
+    if (!plain) return null;
+    const data = new TextEncoder().encode(plain);
+    const buf  = await window.crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   return {
+    checkSession, getSession, isLoggedIn,
+    getPermission, applyPermissions,
+    showLoginScreen, attemptLogin, logout, requireLogin,
     hashPassword,
-    verifyPassword,
-    getSession,
-    setSession,
-    clearSession,
-    isLoggedIn,
-    getPermission,
-    applyPermissions,
-    showLoginScreen,
-    attemptLogin,
-    logout,
-    requireLogin,
-    ROLE_DEFAULTS,
-    SECTIONS,
+    ROLE_DEFAULTS, SECTIONS,
+    // Legacy compatibility shims
+    setSession: () => {},
+    clearSession: () => { _session = null; },
+    verifyPassword: async () => true,
   };
 })();
