@@ -232,7 +232,7 @@ function renderUsers(params = {}) {
         <div class="drawer-section-title">Roles & Types</div>
         <div class="form-group form-full">
           <label class="form-label">User Types (multi-select)</label>
-          ${multiPill('u-types-group', Store.USER_TYPES, formData.types || [], 'tag-accent')}
+          ${multiPill('u-types-group', Store.USER_TYPES, formData.userTypes || [], 'tag-accent')}
         </div>
       </div>
 
@@ -275,7 +275,7 @@ function renderUsers(params = {}) {
       const notesEl = body.querySelector('#u-notes');
       if (notesEl) notesEl.addEventListener('input', () => formData.notes = notesEl.value);
       // Types multi-check
-      wireCheckboxGroup(body, '#u-types-group', formData, 'types');
+      wireCheckboxGroup(body, '#u-types-group', formData, 'userTypes');
       // Tags multi-check
       wireCheckboxGroup(body, '#u-tags-group', formData, 'tags');
     }

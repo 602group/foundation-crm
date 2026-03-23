@@ -57,7 +57,16 @@ CREATE TABLE IF NOT EXISTS auctions (
   starting_bid          NUMERIC,
   final_price           NUMERIC,
   sell_price            NUMERIC,
+  buy_now_price         NUMERIC,
   fmv                   NUMERIC,
+  quantity              INTEGER DEFAULT 1,
+  city                  TEXT,
+  state                 TEXT,
+  givesmart_url         TEXT,
+  event_code            TEXT,
+  item_token            TEXT,
+  item_number           TEXT,
+  completion_notes      TEXT,
   launch_date           DATE,
   end_date              DATE,
   confirmed_play_date   DATE,
@@ -222,16 +231,25 @@ CREATE TRIGGER messages_updated_at BEFORE UPDATE ON messages FOR EACH ROW EXECUT
 
 -- ── EVENTS ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS events (
-  id          TEXT PRIMARY KEY,
-  name        TEXT,
-  type        TEXT,
-  status      TEXT DEFAULT 'Upcoming',
-  start_date  DATE,
-  end_date    DATE,
-  location    TEXT,
-  user_ids    JSONB DEFAULT '[]',
-  notes       TEXT,
-  activity_log JSONB DEFAULT '[]',
+  id                  TEXT PRIMARY KEY,
+  name                TEXT,
+  type                TEXT,
+  status              TEXT DEFAULT 'Upcoming',
+  date                DATE,
+  start_date          DATE,
+  end_date            DATE,
+  location            TEXT,
+  capacity            INTEGER,
+  entry_fee           NUMERIC,
+  sponsorship_revenue NUMERIC,
+  discounts           NUMERIC,
+  refunds             NUMERIC,
+  course_id           TEXT,
+  user_ids            JSONB DEFAULT '[]',
+  attendees           JSONB DEFAULT '[]',
+  spots_registered    INTEGER DEFAULT 0,
+  notes               TEXT,
+  activity_log        JSONB DEFAULT '[]',
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW(),
   created_by  TEXT,
@@ -356,3 +374,29 @@ ALTER TABLE lost_demand      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE id_counters      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_log        ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================
+-- MIGRATION SCRIPT: Run this directly in Supabase SQL Editor
+-- to patch existing staging/production databases with the new fields
+-- ============================================================
+/*
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS buy_now_price NUMERIC;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 1;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS givesmart_url TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS event_code TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS item_token TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS item_number TEXT;
+ALTER TABLE auctions ADD COLUMN IF NOT EXISTS completion_notes TEXT;
+
+ALTER TABLE events ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS capacity INTEGER;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS entry_fee NUMERIC;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS sponsorship_revenue NUMERIC;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS discounts NUMERIC;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS refunds NUMERIC;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS course_id TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS attendees JSONB DEFAULT '[]';
+ALTER TABLE events ADD COLUMN IF NOT EXISTS spots_registered INTEGER DEFAULT 0;
+*/

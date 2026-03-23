@@ -220,6 +220,19 @@ const Store = (() => {
     interest_level:      'interestLevel',
     budget_tier:         'budgetTier',
     table_name:          'tableName',
+    
+    // Auctions Extra
+    item_number:         'itemNumber',
+    buy_now_price:       'buyNowPrice',
+    givesmart_url:       'givesmartUrl',
+    event_code:          'eventCode',
+    item_token:          'itemToken',
+    completion_notes:    'completionNotes',
+    
+    // Events Extra
+    entry_fee:           'entryFee',
+    sponsorship_revenue: 'sponsorshipRevenue',
+    spots_registered:    'spotsRegistered',
   };
 
   const FIELD_MAP_REVERSE = Object.fromEntries(Object.entries(FIELD_MAP).map(([k, v]) => [v, k]));
