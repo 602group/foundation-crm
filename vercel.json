@@ -4,18 +4,6 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "css/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "js/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
     }
   ],
   "rewrites": [
@@ -24,16 +12,8 @@
       "destination": "/server.js"
     },
     {
-      "source": "/(.*\\.js)",
-      "destination": "/$1"
-    },
-    {
-      "source": "/(.*\\.css)",
-      "destination": "/$1"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/server.js"
     }
   ]
 }
