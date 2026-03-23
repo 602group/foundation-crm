@@ -33,7 +33,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change-me-in-production';
 
 // ─── In-memory session store (keyed by session token) ────────────────────────
-const sessions = new Map();
+
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -62,8 +62,7 @@ app.use(express.static(path.join(__dirname)));
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function createSession(adminRecord) {
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, {
+  return JSON.stringify({
     adminId:     adminRecord.id,
     name:        adminRecord.name,
     email:       adminRecord.email,
@@ -71,19 +70,18 @@ function createSession(adminRecord) {
     permissions: adminRecord.permissions || null,
     loginTime:   Date.now(),
   });
-  return token;
 }
 
 function getSession(req) {
-  const token = req.signedCookies?.crm_session || req.cookies?.crm_session;
+  const token = req.signedCookies?.crm_session;
   if (!token) return null;
-  const sess = sessions.get(token);
-  if (!sess) return null;
-  if (Date.now() - sess.loginTime > SESSION_TTL_MS) {
-    sessions.delete(token);
+  try {
+    const sess = typeof token === 'string' ? JSON.parse(token) : token;
+    if (!sess || Date.now() - sess.loginTime > SESSION_TTL_MS) return null;
+    return sess;
+  } catch (err) {
     return null;
   }
-  return sess;
 }
 
 function requireSession(req, res, next) {
@@ -107,7 +105,16 @@ app.get('/api/assistant/health', (_req, res) => {
 app.get('/api/auth/session', (req, res) => {
   const sess = getSession(req);
   if (!sess) return res.status(401).json({ authenticated: false });
-  res.json({ authenticated: true, ...sess });
+  // Extend session securely
+  sess.loginTime = Date.now();
+  res.cookie('crm_session', JSON.stringify(sess), {
+    httpOnly: true,
+    signed: true,
+    maxAge: SESSION_TTL_MS,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+  res.json({ authenticated: true, ok: true, name: sess.name, role: sess.role, email: sess.email });
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -161,8 +168,6 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-  const token = req.signedCookies?.crm_session || req.cookies?.crm_session;
-  if (token) sessions.delete(token);
   res.clearCookie('crm_session');
   res.json({ ok: true });
 });

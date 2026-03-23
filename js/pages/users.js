@@ -32,7 +32,7 @@ function renderUsers(params = {}) {
 
 
   // ─── AUTO-SPAWN PUBLIC USER FOR DEMO ──────────────────────────────────────────
-  if (!Store.getAll('users').find(u => (u.types || []).includes('Public'))) {
+  if (!Store.getAll('users').find(u => (u.userTypes || []).includes('Public'))) {
     Store.create('users', {
       firstName: 'Jane', lastName: 'Public', email: 'jane@public.org',
       phone: '555-0199', city: 'Demo City', state: 'CA',
